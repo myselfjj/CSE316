@@ -1,2 +1,3 @@
-# CSE316
-Checkpoint/Restart Mechanism
+# Checkpoint/Restart Mechanism
+CSE316 Project
+
