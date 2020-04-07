@@ -1,3 +1,6 @@
+/*This is a initial part of the code other parts will be added in next revision*/
+
+
 #include <stdlib.h>
 #include <ckpt.h>
 extern void ckptSocket(void);
