@@ -45,7 +45,7 @@ do_checkpoint(ckpt_id_t id, u_long type, char *path_name)
         id, ckpt_type_str(CKPT_REAL_TYPE(type)), path_name);
     if ((cr = ckpt_create(path_name, id, type, 0, 0)) != 0) {
         printf("Failed to checkpointing process %lldn", id);
-        return (cr);
+        return (cr); 
     }
     return (0);
 }
