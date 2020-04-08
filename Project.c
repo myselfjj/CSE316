@@ -49,6 +49,53 @@ do_checkpoint(ckpt_id_t id, u_long type, char *path_name)
     }
     return (0);
 }
+do_restart(char *path_n)
+{
+    printf("Restarting remaining processes %s n", path_n);
+    if (ckpt_restart(path_n, 0, 0) < 0) {
+        printf("Restarting %s failedn", path_n);
+        return (-1);
+    }
+}
+
+ckpt_info(char *path_n)
+{
+    ckpt_stat_t *sp, *sp_next;
+    int cr;
+    if ((cr = ckpt_stat(path_n, &sp)) != 0) 
+	{
+        printf("Can't get the info. %s \n", path_n);
+        return (cr);
+    }
+    printf("nInformation About Statefile %s (%s):\n",
+        path, rev_to_str(sp->cs_revision));
+    while (sp) {
+        printf(" Process:tt%sn", sp->cs_psargs);
+        printf(" PID,PPID:tt%d,%dn", sp->cs_pid, sp->cs_ppid);
+        printf(" PGRP,SID:tt%d,%dn", sp->cs_pgrp, sp->cs_sid);
+        printf(" Working at dir:t%sn", sp->cs_cdir);
+        printf(" Num of Openfiles:t%dn", sp->cs_nfiles);
+        printf(" Checkpointed @t%sn", ctime(&sp->cs_stat.st_mtime));
+        sp_next = sp->cs_next;
+        free(sp);
+        sp = sp_next;
+    }
+    return (0);
+}
+
+do_remove(char *path_name)
+{
+    int cr = 0;
+    if ((cr = ckpt_remove(path)) != 0) {
+        printf("Remove checkpoint statefile %s failedn", path_name);
+        return (cr);
+    }
+}
+
+int ckpt_setup(struct ckpt_args *args[], size_t nargs)
+{
+    return(0);
+}
 
 main(int argc, char *argv[])
 {
