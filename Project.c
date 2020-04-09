@@ -3,10 +3,10 @@
 
 #include <stdlib.h>
 #include <ckpt.h>
-extern void ckptSocket(void);
-extern void ckptXserver(void);
-extern void restartSocket(void);
-extern void restartXserver(void);
+#include <sys/types.h>
+#include <sys/mount.h>
+#include <unistd.h>
+#include <stdio.h>
 extern char *cdFile;
 extern FILE fpCD;
 extern char *cdFile;
@@ -14,6 +14,7 @@ extern FILE fpCD;
 extern long cdOffset;
 long cdOffset;
 extern int sock; 
+
 catchRESTART()
 {
     while (access("/CDROM/data", R_OK) == -1) {
@@ -41,17 +42,18 @@ static int
 do_checkpoint(ckpt_id_t id, u_long type, char *path_name)
 {
     int cr;
-    printf("CKP%d, type %s,to dir%s n",
+    printf("CKP%d, type %s,to dir%s \n",
         id, ckpt_type_str(CKPT_REAL_TYPE(type)), path_name);
     if ((cr = ckpt_create(path_name, id, type, 0, 0)) != 0) {
-        printf("Failed to checkpointing process %lldn", id);
-        return (cr); 
+        printf("Failure to the checkpoint process %ld \n", id);
+        return (cr);
     }
     return (0);
 }
+
 do_restart(char *path_n)
 {
-    printf("Restarting remaining processes %s n", path_n);
+    printf("Restarting remaining processes %s \n", path_n);
     if (ckpt_restart(path_n, 0, 0) < 0) {
         printf("Restarting %s failedn", path_n);
         return (-1);
@@ -60,25 +62,25 @@ do_restart(char *path_n)
 
 ckpt_info(char *path_n)
 {
-    ckpt_stat_t *sp, *sp_next;
+    ckpt_stat_t *kp, *kp_next;
     int cr;
-    if ((cr = ckpt_stat(path_n, &sp)) != 0) 
+    if ((cr = ckpt_stat(path_n, &kp)) != 0) 
 	{
         printf("Can't get the info. %s \n", path_n);
         return (cr);
     }
     printf("nInformation About Statefile %s (%s):\n",
-        path, rev_to_str(sp->cs_revision));
-    while (sp) {
-        printf(" Process:tt%sn", sp->cs_psargs);
-        printf(" PID,PPID:tt%d,%dn", sp->cs_pid, sp->cs_ppid);
-        printf(" PGRP,SID:tt%d,%dn", sp->cs_pgrp, sp->cs_sid);
-        printf(" Working at dir:t%sn", sp->cs_cdir);
-        printf(" Num of Openfiles:t%dn", sp->cs_nfiles);
-        printf(" Checkpointed @t%sn", ctime(&sp->cs_stat.st_mtime));
-        sp_next = sp->cs_next;
-        free(sp);
-        sp = sp_next;
+        path, rev_to_str(kp->cs_revision));
+    while (kp) {
+        printf(" Process:\t \t %s \n", kp->cs_psargs);
+        printf(" PID,PPID:\t \t %d, %d \n", kp->cs_pid, kp->cs_ppid);
+        printf(" PGRP,SID:\t \t %d, %d \n", kp->cs_pgrp, kp->cs_sid);
+        printf(" Working at dir:\t %s \n", kp->cs_cdir);
+        printf(" Num of Openfiles:\t %d \n", kp->cs_nfiles);
+        printf(" Checkpointed at %s \n", ctime(&kp->cs_stat.st_mtime));
+        kp_next = kp->cs_next;
+        free(kp);
+        kp = kp_next;
     }
     return (0);
 }
@@ -97,6 +99,11 @@ int ckpt_setup(struct ckpt_args *args[], size_t nargs)
     return(0);
 }
 
+extern void ckptSocket(void);
+extern void ckptXserver(void);
+extern void restartSocket(void);
+extern void restartXserver(void);
+
 main(int argc, char *argv[])
 {
     int err = 0;
@@ -104,7 +111,7 @@ main(int argc, char *argv[])
         (atcheckpoint(ckptXserver) == -1) ||
         (atrestart(restartSocket) == -1) ||
         (atrestart(restartXserver) == -1))
-            perror("Can't setup checkpoint and restart handling");
-    
+            perror("Cannot setup checkpoint and restart handling");
     exit(0);
+}
 }
