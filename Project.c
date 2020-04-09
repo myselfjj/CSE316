@@ -1,4 +1,4 @@
-/*This is a initial part of the code other parts will be added in next revision*/
+/*This is a final part of the code revision*/
 
 
 #include <stdlib.h>
